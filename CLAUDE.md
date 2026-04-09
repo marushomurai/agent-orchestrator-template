@@ -1,126 +1,22 @@
-# CLAUDE.md - Autonomous Orchestration Ecosystem
+# Agent Orchestration Template
 
-Add this section to your project's CLAUDE.md file.
+このリポは **オーケストレーション・エージェントプール** のひな型。**詳細なワークフロー・ディレクトリ・マトリクス・YAML例**: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md) と [`.claude/agents/_template.md`](.claude/agents/_template.md)
 
----
+## 憲法（要約）
 
-## Agent Orchestration
+- タスクは **プール覆盖率** に基づき既存 / 統合 / 新規エージェントを選ぶ  
+- **事前定義の抽象エージェントだけに頼らない** — 要件から具体化する  
+- 実行後は `manifests/` のメトリクス更新。条件達成で `elite/` へ  
 
-**Must**: All tasks must pass through the orchestrator workflow before execution.
+## クイックリファレンス
 
-### Core Principle
+| 状況 | アクション |
+|------|------------|
+| 新規タスク | `pool/` をスキャンし覆盖率計算 |
+| 90%+ 一致 | 既存エージェント |
+| 60–90% | 統合エージェント作成 |
+| <60% | 特化エージェント新規 |
 
-**Do NOT use pre-defined abstract agents.** Instead:
-1. Create specialized agents from actual task requirements
-2. Integrate existing agents when synergy improves outcomes
-3. Let the agent pool evolve through continuous improvement
+## Rule split
 
-### Workflow
-
-```
-Task Received
-     ↓
-Scan pool/ for existing agents
-     ↓
-Calculate coverage rate against task requirements
-     ↓
-┌─────────────────────────────────────────────────────┐
-│ Coverage 90%+  → Use existing agent                 │
-│ Coverage 60-90% → Create integrated agent           │
-│ Coverage <60%  → Create new specialized agent       │
-└─────────────────────────────────────────────────────┘
-     ↓
-Execute task with selected/created agent
-     ↓
-Update manifests/ with metrics
-     ↓
-Promote to elite/ if qualified
-```
-
-### Directory Structure
-
-```
-.claude/agents/
-├── orchestrator.md        # Orchestrator definition (read first)
-├── _template.md           # Template for new agents
-├── manifests/             # Skill sheets (metadata + metrics)
-│   └── {agent-name}.yaml
-└── pool/                   # Agent pool
-    ├── specialized/        # Task-specific agents (newly created)
-    ├── integrated/         # Merged agents (1st/2nd Gen Integration)
-    └── elite/              # Hyper-Elite agents (proven performers)
-```
-
-### Decision Matrix
-
-| Coverage Rate | Action | Save Location |
-|---------------|--------|---------------|
-| **90%+** | Use existing agent directly | - |
-| **60-90%** | Merge source agents into integrated agent | `pool/integrated/` |
-| **Below 60%** | Create new specialized agent | `pool/specialized/` |
-
-### Agent Creation Rules
-
-When creating a new agent:
-
-1. **Copy `_template.md`** structure
-2. **Define in YAML frontmatter**:
-   ```yaml
-   ---
-   name: task-domain-specialist
-   description: One-line description
-   tools: Read, Grep, Glob, Edit, Write, Bash
-   model: opus
-   ---
-   ```
-3. **Write detailed system prompt** in body
-4. **Create skill sheet** in `manifests/{agent-name}.yaml`
-5. **Save agent** to appropriate `pool/` subdirectory
-
-### Integration Rules
-
-When merging agents:
-
-1. **Identify source agents** with partial coverage
-2. **Combine capabilities**, eliminate redundancy
-3. **Resolve conflicts** between source agents
-4. **Record lineage** in skill sheet `parent_agents` field
-5. **Save to `pool/integrated/merged-{source1}-{source2}.md`**
-
-### Evolution Tracking
-
-After every task execution, update the agent's skill sheet:
-
-```yaml
-metrics:
-  usage_count: 5        # Increment
-  success_rate: 0.85    # (successes / usage_count)
-  last_used: 2025-01-15 # Current date
-```
-
-### Elite Promotion
-
-An agent qualifies for elite status when:
-- `usage_count >= 5`
-- `success_rate >= 0.8`
-
-Action: Move from `specialized/` or `integrated/` to `elite/`
-
-### Reference Files
-
-- `.claude/agents/orchestrator.md` - Full orchestrator logic
-- `.claude/agents/_template.md` - Agent definition template
-- `.claude/agents/manifests/_template.yaml` - Skill sheet template
-
----
-
-## Quick Reference
-
-| Situation | Action |
-|-----------|--------|
-| New task received | Scan `pool/`, calculate coverage |
-| Perfect match exists | Use existing agent |
-| Partial matches | Create integrated agent |
-| No good match | Create specialized agent |
-| Task completed | Update `manifests/` metrics |
-| High-performing agent | Promote to `elite/` |
+- テンプレ注入用の長文ブロックは **`CLAUDE.md` に残さない** — このファイルは入口のみ。フル手順は `.claude/agents/` 側を更新する
